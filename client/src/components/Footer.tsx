@@ -93,7 +93,7 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="border-t border-gray-800 mt-8 pt-8 text-center">
                     <p className="text-gray-400 text-sm">
-                        © {new Date().getFullYear()} Your Company. All rights reserved.
+                        © {new Date().getFullYear()} Traceworks. All rights reserved.
                     </p>
                 </div>
             </div>
