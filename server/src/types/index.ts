@@ -8,7 +8,7 @@ export interface AccessTokenPayload extends JwtPayload {
 }
 
 export interface User {
-  id?: number;
+  id: number;
   user_name: string;
   email: string;
   password_hash: string;
@@ -19,4 +19,11 @@ export interface User {
 export interface RefreshTokenRow {
   user_id: number;
   expires_at: Date | string;
+}
+
+export interface AuthRequestBody {
+  id?: number | string;
+  user_name: string;
+  email: string;
+  password: string;
 }
