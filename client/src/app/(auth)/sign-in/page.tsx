@@ -25,7 +25,7 @@ export default function SignInPage() {
             });
             const j = await res.json();
             if (res.ok && j.ok) {
-                router.push('/dashboard');
+                router.push('/me');
             } else {
                 setErr(j.err || 'Invalid credentials');
             }

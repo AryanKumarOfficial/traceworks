@@ -148,7 +148,7 @@ export class AuthController {
       return res.status(401).json({ ok: false, err: 'invalid access token' });
 
     const r = await this.auth['db'].pool.query(
-      'SELECT id, email FROM users WHERE id=$1',
+      'SELECT id, user_name,email FROM users WHERE id=$1',
       [payload.sub],
     );
     if (r.rowCount === 0) return res.status(401).json({ ok: false });
