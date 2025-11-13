@@ -62,7 +62,7 @@ export class AuthController {
         .json({ ok: false, err: 'email and password required' });
     const user = await this.auth.findUserByEmail(email);
     if (!user)
-      return res.status(401).json({ ok: false, err: 'invalid credentials' });
+      return res.status(401).json({ ok: false, err: 'User Not found' });
     const ok = await this.auth.verifyPassword(
       password,
       user.salt,
