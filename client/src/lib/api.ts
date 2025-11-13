@@ -13,7 +13,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'headers'> {
 export async function apiFetch<T = any>(
     path: string,
     options: ApiFetchOptions = {}
-): Promise<T> {
+): Promise<Response> {
     const url = `${API_BASE}${path}`;
     const opts: RequestInit = {
         credentials: 'include',
@@ -39,5 +39,5 @@ export async function apiFetch<T = any>(
         }
     }
 
-    return res.json();
+    return res;
 }

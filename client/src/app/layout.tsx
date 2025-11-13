@@ -22,10 +22,12 @@ export default function RootLayout({
     return (
         <html lang="en" className={inter.variable}>
         <body
-            className={`antialiased`}
+            className={`antialiased min-h-screen flex flex-col`}
         >
         <Header/>
-        {children}
+        <main className={"flex-1 mx-auto w-container px-4 py-8 min-h-full lg:px-8 lg:max-w-7xl"}>
+            {children}
+        </main>
         <Footer/>
         </body>
         </html>

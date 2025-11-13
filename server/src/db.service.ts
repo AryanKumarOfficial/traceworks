@@ -20,7 +20,7 @@ import path from 'path';
 @Injectable()
 export class DbService implements OnModuleInit, OnModuleDestroy {
   pool: Pool;
-  private readonly migrationsPath: string;
+  private readonly migrationsPathEnv?: string;
   private readonly maxRetries: number;
   private readonly baseDelayMs: number;
 
@@ -31,9 +31,7 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
     this.pool = new Pool({ connectionString: connection });
 
     // configurable migration path (useful for tests)
-    this.migrationsPath =
-      process.env.MIGRATIONS_PATH ||
-      path.resolve(__dirname, '..', 'migrations', 'init.sql');
+    this.migrationsPathEnv = process.env.MIGRATIONS_PATH;
 
     this.maxRetries = parseInt(process.env.DB_CONNECT_RETRIES || '6', 10);
     this.baseDelayMs = parseInt(
@@ -54,6 +52,10 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
    * Uses exponential backoff up to `maxRetries`.
    */
   private async waitForDb(): Promise<void> {
+    if (process.env.SKIP_DB_WAIT === 'true') {
+      console.info('SKIP_DB_WAIT=true — skipping DB readiness wait');
+      return;
+    }
     let attempt = 0;
     while (attempt < this.maxRetries) {
       attempt += 1;
@@ -77,6 +79,41 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Resolve candidate migration file paths and return the first that exists.
+   */
+  private resolveMigrationPath(): string | null {
+    // 1. explicit environment override
+    if (this.migrationsPathEnv) {
+      if (fsSync.existsSync(this.migrationsPathEnv))
+        return this.migrationsPathEnv;
+      console.warn(
+        'MIGRATIONS_PATH set but file not found at',
+        this.migrationsPathEnv,
+      );
+    }
+
+    // 2. project root / migrations/init.sql (process.cwd())
+    const p1 = path.resolve(process.cwd(), 'migrations', 'init.sql');
+    if (fsSync.existsSync(p1)) return p1;
+
+    // 3. src relative path (useful when running ts-node)
+    //    __dirname points to .../src in ts-node dev environment
+    const p2 = path.resolve(__dirname, '..', 'migrations', 'init.sql');
+    if (fsSync.existsSync(p2)) return p2;
+
+    // 4. dist relative path (useful when running compiled code from project root)
+    const p3 = path.resolve(__dirname, '..', '..', 'migrations', 'init.sql');
+    if (fsSync.existsSync(p3)) return p3;
+
+    // 5. another common layout: projectRoot/dist/migrations/init.sql
+    const p4 = path.resolve(process.cwd(), 'dist', 'migrations', 'init.sql');
+    if (fsSync.existsSync(p4)) return p4;
+
+    // none found
+    return null;
+  }
+
+  /**
    * Run at module init:
    * - wait for DB
    * - if migrations file exists, read and execute it using a client
@@ -91,18 +128,26 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
       throw err;
     }
 
+    // find migration file in best candidate path
+    const resolved = this.resolveMigrationPath();
+    if (!resolved) {
+      console.info('No migration file found in candidate locations. Searched:');
+      console.info('- MIGRATIONS_PATH:', this.migrationsPathEnv || '(not set)');
+      console.info('- process.cwd()/migrations/init.sql');
+      console.info('- __dirname/../migrations/init.sql (src)');
+      console.info('- __dirname/../../migrations/init.sql (dist)');
+      console.info('- process.cwd()/dist/migrations/init.sql');
+      return;
+    }
+
+    console.info('Using migration file at:', resolved);
+
     // attempt to run migration file if exists
     let client: PoolClient | undefined;
     try {
-      // check existence with synchronous check to avoid race (fast)
-      if (!fsSync.existsSync(this.migrationsPath)) {
-        console.info('No migration file found at', this.migrationsPath);
-        return;
-      }
-
-      const sql = await fs.readFile(this.migrationsPath, 'utf8');
+      const sql = await fs.readFile(resolved, 'utf8');
       if (!sql || !sql.trim()) {
-        console.info('Migration file is empty, skipping:', this.migrationsPath);
+        console.info('Migration file is empty, skipping:', resolved);
         return;
       }
 
@@ -110,7 +155,7 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
       try {
         // run migration (single call; pg accepts multiple statements separated by ;)
         await client.query(sql);
-        console.info('DB migration applied from', this.migrationsPath);
+        console.info('DB migration applied from', resolved);
       } finally {
         // always release if we successfully acquired a client
         try {
@@ -120,7 +165,7 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
         }
       }
     } catch (err) {
-      console.error('Error running DB migration', err);
+      console.error('Error running DB migration', resolved, err);
       // don't rethrow here — depending on your preference, you can rethrow
       // to stop app boot or swallow to let the app continue.
       // throw err;

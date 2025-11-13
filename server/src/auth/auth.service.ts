@@ -83,10 +83,12 @@ export class AuthService {
     const client = await this.db.pool.connect();
     try {
       const { salt, hash } = await this.hashPassword(password);
-      const r = await client.query(
-        'INSERT INTO users(user_name. email, password_hash, salt) VALUES($1,$2,$3) RETURNING id,user_name. email',
-        [user_name, email, hash, salt],
-      );
+      const sql = `
+      INSERT INTO users (user_name, email, password_hash, salt)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, user_name, email`;
+      const params = [user_name, email, hash, salt];
+      const r = await client.query(sql, params);
       return r.rows[0] as User | undefined;
     } finally {
       client.release();

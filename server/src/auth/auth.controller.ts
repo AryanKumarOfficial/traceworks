@@ -48,6 +48,7 @@ export class AuthController {
       if (/(unique|duplicate)/i.test((err as Error).message)) {
         return res.status(409).json({ ok: false, err: 'email already exists' });
       }
+      console.log(`Internal Error: `, err);
       return res.status(500).json({ ok: false, err: 'internal error' });
     }
   }
