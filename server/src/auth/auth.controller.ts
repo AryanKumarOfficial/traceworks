@@ -1,7 +1,8 @@
 import { Controller, Post, Body, Res, Req, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Response, Request } from 'express';
-import type { AuthRequestBody, User } from '../types';
+import type { User } from '../types';
+import type { SignInDto, SignUpDto } from './dto';
 
 /**
  * Small cookie parser helper (avoid cookie-parser dependency):
@@ -29,7 +30,7 @@ export class AuthController {
   @Post('signup')
   async signup(
     @Body()
-    body: AuthRequestBody,
+    body: SignUpDto,
     @Res() res: Response,
   ) {
     const { user_name, email, password } = body || {};
@@ -52,7 +53,7 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() body: AuthRequestBody, @Res() res: Response) {
+  async login(@Body() body: SignInDto, @Res() res: Response) {
     const { email, password } = body || {};
     if (!email || !password)
       return res

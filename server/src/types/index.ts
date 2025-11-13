@@ -20,10 +20,3 @@ export interface RefreshTokenRow {
   user_id: number;
   expires_at: Date | string;
 }
-
-export interface AuthRequestBody {
-  id?: number | string;
-  user_name: string;
-  email: string;
-  password: string;
-}
