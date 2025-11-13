@@ -17,12 +17,11 @@ export default function Dashboard() {
                 const res = await apiFetch('/auth/me', {method: 'GET'});
                 if (res.ok) {
                     const j = await res.json();
+                    console.log(`j`, j, mounted);
                     if (j.ok && mounted) setUser(j.user);
-                    else router.replace('/sign-in');
-                } else {
-                    router.replace('/sign-in');
                 }
-            } catch {
+            } catch (err) {
+                console.log(`error`, err);
                 router.replace('/sign-in');
             } finally {
                 if (mounted) setLoading(false);
@@ -37,6 +36,7 @@ export default function Dashboard() {
         const res = await apiFetch('/auth/logout', {method: 'POST'});
         console.log(`logged out`, await res.json());
         router.push('/sign-in');
+        router.refresh();
     };
 
     if (loading) return <div className="mx-auto w-container">

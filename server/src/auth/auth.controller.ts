@@ -130,9 +130,51 @@ export class AuthController {
   async logout(@Req() req: Request, @Res() res: Response) {
     const cookies = parseCookies(req);
     const rt = cookies['refresh_token'] || req.headers['x-refresh-token'];
-    if (rt) await this.auth.revokeRefreshToken(rt as string);
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    if (rt) {
+      try {
+        await this.auth.revokeRefreshToken(rt as string);
+      } catch (e) {
+        // swallow DB errors — we'll still try to clear cookies
+        console.warn('Error revoking refresh token', e);
+      }
+    }
+    const secureFlag = process.env.NODE_ENV === 'production'; // same as when setting
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: secureFlag,
+      path: '/', // match set path
+    });
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: secureFlag,
+      path: '/auth/refresh', // MUST match the original path
+    });
+
+    res.clearCookie('session_present', {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: secureFlag,
+      path: '/', // match how you set it
+    });
+    res.cookie('refresh_token', '', {
+      httpOnly: true,
+      path: '/auth/refresh',
+      expires: new Date(0),
+    });
+    res.cookie('access_token', '', {
+      httpOnly: true,
+      path: '/',
+      expires: new Date(0),
+    });
+    res.cookie('session_present', '', {
+      httpOnly: true,
+      path: '/',
+      expires: new Date(0),
+    });
+
     return res.json({ ok: true });
   }
 

@@ -10,7 +10,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'headers'> {
  * apiFetch: like fetch but sends cookies and attempts a single refresh if 401.
  * options: same as fetch options (method, headers, body, etc.)
  */
-export async function apiFetch<T = any>(
+export async function apiFetch(
     path: string,
     options: ApiFetchOptions = {}
 ): Promise<Response> {
@@ -21,6 +21,7 @@ export async function apiFetch<T = any>(
             'Content-Type': 'application/json',
             ...(options.headers || {})
         },
+        cache: "no-store",
         ...options,
     };
 
