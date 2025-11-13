@@ -10,7 +10,9 @@ async function bootstrap() {
     credentials: true, // Allow cookies to be sent
   });
   app.use(cookieParser());
+  const port = parseInt(process.env.PORT || '5000', 10);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(port);
+  console.log(`Backend listening on http://0.0.0.0:${port}`);
 }
 bootstrap();

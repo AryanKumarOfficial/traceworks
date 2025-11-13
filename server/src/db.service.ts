@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 
 import { Pool } from 'pg';
+import fs from 'fs';
+import path from 'path';
 
 @Injectable()
 export class DbService implements OnModuleInit, OnModuleDestroy {
@@ -12,29 +14,23 @@ export class DbService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    // ensure tables
-    const client = await this.pool.connect();
+    // attempt to run migration file if exists
     try {
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS users (
-         id SERIAL PRIMARY KEY,
-         email TEXT UNIQUE NOT NULL,
-         password_hash TEXT NOT NULL,
-         salt TEXT NOT NULL,
-         created_at TIMESTAMP DEFAULT now()
-          );
-
-
-        CREATE TABLE IF NOT EXISTS refresh_tokens (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          token_hash TEXT NOT NULL,
-          expires_at TIMESTAMP NOT NULL,
-          created_at TIMESTAMP DEFAULT now()
-          );
-      `);
-    } finally {
-      client.release();
+      const sqlPath = path.resolve(__dirname, '..', 'migrations', 'init.sql');
+      if (fs.existsSync(sqlPath)) {
+        const sql = fs.readFileSync(sqlPath, 'utf8');
+        const client = await this.pool.connect();
+        try {
+          await client.query(sql);
+          console.log('DB migration applied');
+        } finally {
+          client.release();
+        }
+      } else {
+        console.warn('No migration file found at', sqlPath);
+      }
+    } catch (err) {
+      console.error('Error running DB migration', err);
     }
   }
 
