@@ -91,3 +91,11 @@ export default function Header(): JSX.Element {
         </nav>
     );
 }
+
+function AuthButton() {
+    return (
+        <>
+
+        </>
+    )
+}
