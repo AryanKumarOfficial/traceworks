@@ -3,29 +3,29 @@ import {JSX, useState} from 'react';
 import {Menu, X} from 'lucide-react';
 import Link from "next/link";
 
+const navLinks: {
+    label: string;
+    href: string;
+}[] = [
+    {
+        label: `Home`,
+        href: `/`,
+    },
+    {
+        label: `Contact`,
+        href: `/contact`,
+    },
+    {
+        label: `About`,
+        href: `/about`,
+    }, {
+        label: `Sign In`,
+        href: `/sign-in`,
+    }
+]
 export default function Header(): JSX.Element {
     const [isOpen, setIsOpen] = useState(false);
 
-    const navLinks: {
-        label: string;
-        href: string;
-    }[] = [
-        {
-            label: `Home`,
-            href: `/`,
-        },
-        {
-            label: `Contact`,
-            href: `/contact`,
-        },
-        {
-            label: `About`,
-            href: `/about`,
-        }, {
-            label: `Sign In`,
-            href: `/sign-in`,
-        }
-    ]
 
     return (
         <nav className="bg-white shadow-sm">
