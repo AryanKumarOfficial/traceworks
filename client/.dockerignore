@@ -1,0 +1,12 @@
+# Node
+node_modules
+
+# Next.js
+.next
+
+# Other
+npm-debug.log
+README.md
+.dockerignore
+Dockerfile
+.git
