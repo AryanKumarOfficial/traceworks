@@ -1,98 +1,213 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# TraceWorks Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+NestJS backend API with PostgreSQL database and JWT authentication.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A RESTful API built with [NestJS](https://nestjs.com/) framework using TypeScript, PostgreSQL for data persistence, and JWT for authentication.
 
-## Project setup
+## Prerequisites
+
+- Node.js (v18 or higher)
+- pnpm package manager
+- PostgreSQL 15 (or use Docker)
+
+## Installation
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-## Compile and run the project
+## Environment Setup
+
+1. Create a `.env` file in the server directory:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Update the environment variables:
+   ```env
+   DATABASE_URL=postgres://app:secret@localhost:5432/appdb
+   JWT_SECRET=your_super_secret_jwt_key
+   ACCESS_TOKEN_EXP=900
+   REFRESH_TOKEN_EXP=604800
+   NODE_ENV=development
+   PORT=5000
+   MIGRATIONS_PATH="path/to/migrations/init.sql"
+   ```
+
+### Environment Variables Explained
+
+- `DATABASE_URL` - PostgreSQL connection string
+  - Format: `postgres://username:password@host:port/database`
+- `JWT_SECRET` - Secret key for signing JWT tokens (change in production!)
+- `ACCESS_TOKEN_EXP` - Access token expiration (900 seconds = 15 minutes)
+- `REFRESH_TOKEN_EXP` - Refresh token expiration (604800 seconds = 7 days)
+- `NODE_ENV` - Environment mode (development/production)
+- `PORT` - Port number for the server
+- `MIGRATIONS_PATH` - Path to database migration files
+
+## Database Setup
+
+### Using Docker
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+docker run -d \
+  --name traceworks-db \
+  -e POSTGRES_USER=app \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=appdb \
+  -p 5432:5432 \
+  postgres:15
 ```
 
-## Run tests
+### Manual PostgreSQL Setup
+
+1. Install PostgreSQL 15
+2. Create a database:
+   ```sql
+   CREATE DATABASE appdb;
+   CREATE USER app WITH PASSWORD 'secret';
+   GRANT ALL PRIVILEGES ON DATABASE appdb TO app;
+   ```
+
+## Running the Application
+
+### Development Mode
+```bash
+# with hot reload
+pnpm run start:dev
+```
+
+### Production Mode
+```bash
+# build the application
+pnpm run build
+
+# run in production
+pnpm run start:prod
+```
+
+### Standard Mode
+```bash
+pnpm run start
+```
+
+## Testing
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm run test
 
 # e2e tests
-$ pnpm run test:e2e
+pnpm run test:e2e
 
 # test coverage
-$ pnpm run test:cov
+pnpm run test:cov
 ```
 
-## Deployment
+## Docker
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Build and Run with Docker
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Build the image
+docker build -t traceworks-server .
+
+# Run the container
+docker run -p 5000:5000 \
+  -e DATABASE_URL=postgres://app:secret@host.docker.internal:5432/appdb \
+  -e JWT_SECRET=supersecret \
+  traceworks-server
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Using Docker Compose
+
+From the root directory:
+```bash
+docker-compose up server
+```
+
+## API Documentation
+
+Once the server is running, you can access:
+
+- API Base URL: http://localhost:5000
+- Health Check: http://localhost:5000/health (if implemented)
+
+## Project Structure
+
+```
+server/
+├── src/
+│   ├── auth/           # Authentication module
+│   ├── users/          # Users module
+│   ├── common/         # Shared utilities
+│   ├── config/         # Configuration files
+│   ├── database/       # Database configuration
+│   └── main.ts         # Application entry point
+├── migrations/         # Database migrations
+├── test/              # Test files
+├── Dockerfile         # Docker configuration
+└── .env.example       # Environment variables template
+```
+
+## Available Scripts
+
+- `pnpm run start` - Start the application
+- `pnpm run start:dev` - Start in development mode with hot reload
+- `pnpm run start:prod` - Start in production mode
+- `pnpm run build` - Build the application
+- `pnpm run format` - Format code with Prettier
+- `pnpm run lint` - Lint code with ESLint
+- `pnpm run test` - Run unit tests
+- `pnpm run test:e2e` - Run end-to-end tests
+- `pnpm run test:cov` - Run tests with coverage
+
+## Troubleshooting
+
+### Database Connection Issues
+
+1. Verify PostgreSQL is running:
+   ```bash
+   docker ps  # if using Docker
+   ```
+
+2. Check connection string in `.env`
+
+3. Test connection:
+   ```bash
+   psql -h localhost -U app -d appdb
+   ```
+
+### Port Already in Use
+
+Change the PORT in `.env` or kill the process using port 5000:
+```bash
+# Windows
+netstat -ano | findstr :5000
+
+# Linux/Mac
+lsof -i :5000
+```
+
+### Migration Issues
+
+Ensure the `MIGRATIONS_PATH` in `.env` points to the correct SQL file.
+
+## Security Notes
+
+- Always change `JWT_SECRET` in production
+- Use strong database passwords
+- Never commit `.env` files to version control
+- Use environment-specific configurations
 
 ## Resources
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [NestJS Documentation](https://docs.nestjs.com)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+[MIT licensed](../LICENSE)
