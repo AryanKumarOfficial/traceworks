@@ -24,7 +24,7 @@ export default function SignInPage() {
                 body: JSON.stringify(form),
             });
             const j = await res.json();
-            console.log(`response: `,j);
+            console.log(`response: `, res.ok && j.ok);
             if (res.ok && j.ok) {
                 router.push('/me');
             } else {
